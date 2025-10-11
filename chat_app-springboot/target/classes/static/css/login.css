@@ -1,0 +1,97 @@
+* {
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-weight: 400;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.58;
+    color: #333;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.form-control {
+    width: 100%;
+    min-height: 38px;
+    font-size: 15px;
+    border: 1px solid #c8c8c8;
+    border-radius: 4px;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+input {
+    padding-left: 10px;
+    outline: none;
+}
+
+h1 {
+    font-size: 1.7em;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+button {
+    border: none;
+    background: #128ff2;
+    color: white;
+    outline: none;
+    vertical-align: middle;
+    padding: 0.6rem 1rem;
+    border-radius: 5px;
+    transition: all 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0d7ad6;
+}
+
+#username-page {
+    text-align: center;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.username-page-container {
+    background: #fff;
+    box-shadow: 0 1px 11px rgba(0, 0, 0, 0.27);
+    border-radius: 2px;
+    width: 100%;
+    max-width: 500px;
+    padding: 35px 55px;
+    min-height: 250px;
+}
+
+.username-page-container .username-submit {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.username-page-container .title {
+    margin-bottom: 30px;
+}
+
+@media screen and (max-width: 480px) {
+    .username-page-container {
+        width: auto;
+        margin: 15px;
+        padding: 25px;
+    }
+}
