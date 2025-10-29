@@ -5,6 +5,7 @@ var messageInput = document.querySelector("#message");
 var messageArea = document.querySelector("#messageArea");
 var connectingElement = document.querySelector(".connecting");
 
+
 var stompClient = null;
 var username = null;
 

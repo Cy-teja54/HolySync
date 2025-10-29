@@ -1,0 +1,20 @@
+# Build outputs
+target/
+bin/
+
+# Local config and secrets (keep application.properties tracked)
+.env
+.env.*
+src/main/resources/application-local.properties
+
+# OS/IDE/editor noise
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Logs and dumps
+*.log
+*.dump
+*.dumpstream

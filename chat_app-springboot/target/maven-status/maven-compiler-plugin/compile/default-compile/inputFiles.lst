@@ -1,6 +1,0 @@
-/home/allurisitaramaraju/chat_app-springboot/src/main/java/in/suratsaiteja/chatapp/controller/ChatController.java
-/home/allurisitaramaraju/chat_app-springboot/src/main/java/in/suratsaiteja/chatapp/model/ChatMessage.java
-/home/allurisitaramaraju/chat_app-springboot/src/main/java/in/suratsaiteja/chatapp/config/WebSocketConfig.java
-/home/allurisitaramaraju/chat_app-springboot/src/main/java/in/suratsaiteja/chatapp/config/WebSocketEventListener.java
-/home/allurisitaramaraju/chat_app-springboot/src/main/java/in/suratsaiteja/chatapp/ChatAppApplication.java
-/home/allurisitaramaraju/chat_app-springboot/src/main/java/in/suratsaiteja/chatapp/controller/HomeController.java

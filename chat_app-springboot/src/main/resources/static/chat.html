@@ -176,6 +176,17 @@
             }
         }
 
+        @keyframes slideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+        }
+
         .task-content {
             color: #e5e7eb;
             font-size: 14px;
@@ -193,6 +204,39 @@
 
         .task-meta i {
             font-size: 11px;
+        }
+
+        .due-date {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            margin-top: 4px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .due-date.overdue {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .due-date.due-soon {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .due-date.due-later {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .due-date i {
+            font-size: 10px;
         }
 
         .empty-tasks {
@@ -249,79 +293,6 @@
             transform: translateY(0);
         }
 
-        .construction-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .construction-content {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            max-width: 400px;
-            animation: scaleIn 0.3s ease;
-        }
-
-        @keyframes scaleIn {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
-        }
-
-        .construction-content i {
-            font-size: 64px;
-            color: #fbbf24;
-            margin-bottom: 20px;
-        }
-
-        .construction-content h3 {
-            font-size: 24px;
-            margin-bottom: 12px;
-        }
-
-        .construction-content p {
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 24px;
-            line-height: 1.6;
-        }
-
-        .close-modal-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .close-modal-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
 
         .chat-header {
             padding: 20px 30px;
@@ -658,7 +629,7 @@
             </div>
 
             <div class="tasks-footer">
-                <button class="google-tasks-btn" onclick="showConstructionModal()">
+                <button class="google-tasks-btn" onclick="initiateGoogleAuth()">
                     <i class="fa-brands fa-google"></i>
                     Add to Google Tasks
                 </button>
@@ -666,17 +637,11 @@
         </div>
     </div>
 
-    <div id="constructionModal" class="construction-modal hidden">
-        <div class="construction-content">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <h3>Under Construction</h3>
-            <p>Google Tasks integration is coming soon! We're working hard to bring you seamless task management.</p>
-            <button class="close-modal-btn" onclick="closeConstructionModal()">Got it</button>
-        </div>
-    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://unpkg.com/compromise@14.9.0/builds/compromise.min.js"></script>
+    <script src="js/nlp-task-extractor.js"></script>
     
     <script>
         var stompClient = null;
@@ -689,28 +654,170 @@
             status.className = className;
         }
 
-        function showConstructionModal() {
-            document.getElementById('constructionModal').classList.remove('hidden');
-        }
-
-        function closeConstructionModal() {
-            document.getElementById('constructionModal').classList.add('hidden');
-        }
-
-        // Close modal when clicking outside
-        document.addEventListener('click', function(event) {
-            const modal = document.getElementById('constructionModal');
-            if (event.target === modal) {
-                closeConstructionModal();
+        // Google Tasks OAuth flow
+        async function initiateGoogleAuth() {
+            try {
+                // Get authorization URL from backend
+                const response = await fetch('/api/google-tasks/auth-url');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Open popup window for OAuth
+                    const popup = window.open(
+                        data.authUrl,
+                        'googleAuth',
+                        'width=500,height=600,scrollbars=yes,resizable=yes'
+                    );
+                    
+                    // Listen for popup completion
+                    const checkClosed = setInterval(() => {
+                        if (popup.closed) {
+                            clearInterval(checkClosed);
+                            showToast('OAuth popup was closed. Please try again.', 'error');
+                        }
+                    }, 1000);
+                    
+                    // Listen for message from popup
+                    window.addEventListener('message', async function(event) {
+                        if (event.origin !== window.location.origin) {
+                            return; // Security check
+                        }
+                        
+                        if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+                            clearInterval(checkClosed);
+                            popup.close();
+                            await handleOAuthCallback(event.data.code);
+                        } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
+                            clearInterval(checkClosed);
+                            popup.close();
+                            showToast('OAuth authentication failed: ' + event.data.error, 'error');
+                        }
+                    });
+                    
+                } else {
+                    const details = data && data.details ? `\nDetails: ${JSON.stringify(data.details)}` : '';
+                    showToast('Failed to get authorization URL: ' + data.error + details, 'error');
+                }
+            } catch (error) {
+                console.error('OAuth initiation error:', error);
+                showToast('Error initiating Google authentication: ' + error.message, 'error');
             }
-        });
+        }
+
+        async function handleOAuthCallback(code) {
+            try {
+                const response = await fetch('/api/google-tasks/callback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ code: code })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Export tasks to Google Tasks
+                    await exportTasksToGoogle(data.accessToken);
+                } else {
+                    showToast('OAuth callback failed: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('OAuth callback error:', error);
+                showToast('Error processing OAuth callback: ' + error.message, 'error');
+            }
+        }
+
+        async function exportTasksToGoogle(accessToken) {
+            if (extractedTasks.length === 0) {
+                showToast('No tasks to export!', 'info');
+                return;
+            }
+
+            try {
+                // Prepare tasks data
+                const tasksData = extractedTasks.map(task => ({
+                    content: task.content,
+                    sender: task.sender,
+                    dueDate: task.dueDate,
+                    timestamp: task.timestamp
+                }));
+
+                const response = await fetch('/api/google-tasks/export', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        accessToken: accessToken,
+                        tasks: tasksData
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showToast(`Successfully exported ${data.createdCount} tasks to Google Tasks!`, 'success');
+                    // Optionally clear the tasks after successful export
+                    // extractedTasks = [];
+                    // renderTasks();
+                } else {
+                    showToast('Failed to export tasks: ' + data.error, 'error');
+                }
+            } catch (error) {
+                console.error('Export error:', error);
+                showToast('Error exporting tasks: ' + error.message, 'error');
+            }
+        }
+
+        function showToast(message, type) {
+            // Create a temporary message element
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${type}-message`;
+            messageElement.textContent = message;
+            messageElement.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 1000;
+                max-width: 400px;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            
+            if (type === 'success') {
+                messageElement.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+            } else if (type === 'error') {
+                messageElement.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+            } else if (type === 'info') {
+                messageElement.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+            }
+            
+            document.body.appendChild(messageElement);
+            
+            // Remove message after 5 seconds
+            setTimeout(() => {
+                messageElement.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => {
+                    if (messageElement.parentNode) {
+                        messageElement.parentNode.removeChild(messageElement);
+                    }
+                }, 300);
+            }, 5000);
+        }
 
         // Task management functions
-        function addTask(taskContent, sender) {
+        function addTask(taskData, sender) {
             const task = {
-                content: taskContent,
+                content: taskData.content,
                 sender: sender,
-                timestamp: new Date().toLocaleTimeString()
+                timestamp: new Date().toLocaleTimeString(),
+                dueDate: taskData.dueDate,
+                dueDateString: taskData.dueDateString,
+                confidence: taskData.confidence || 0.5
             };
             
             extractedTasks.push(task);
@@ -734,6 +841,29 @@
             extractedTasks.forEach(task => {
                 const taskElement = document.createElement('div');
                 taskElement.className = 'task-item';
+                
+                // Determine due date styling
+                let dueDateClass = '';
+                let dueDateIcon = '';
+                let dueDateText = '';
+                
+                if (task.dueDate) {
+                    const dueDate = new Date(task.dueDate);
+                    if (isOverdue(dueDate)) {
+                        dueDateClass = 'overdue';
+                        dueDateIcon = 'fa-solid fa-exclamation-triangle';
+                        dueDateText = `Overdue: ${formatDateForDisplay(dueDate)}`;
+                    } else if (isDueSoon(dueDate)) {
+                        dueDateClass = 'due-soon';
+                        dueDateIcon = 'fa-solid fa-clock';
+                        dueDateText = `Due: ${formatDateForDisplay(dueDate)}`;
+                    } else {
+                        dueDateClass = 'due-later';
+                        dueDateIcon = 'fa-solid fa-calendar';
+                        dueDateText = `Due: ${formatDateForDisplay(dueDate)}`;
+                    }
+                }
+                
                 taskElement.innerHTML = `
                     <div class="task-content">${task.content}</div>
                     <div class="task-meta">
@@ -741,6 +871,12 @@
                         <span>${task.sender}</span>
                         <i class="fa-solid fa-clock"></i>
                         <span>${task.timestamp}</span>
+                        ${task.dueDate ? `
+                            <div class="due-date ${dueDateClass}">
+                                <i class="${dueDateIcon}"></i>
+                                <span>${dueDateText}</span>
+                            </div>
+                        ` : ''}
                     </div>
                 `;
                 tasksList.appendChild(taskElement);
@@ -748,21 +884,15 @@
         }
 
         function detectTasks(message) {
-            const taskPatterns = [
-                /todo[:\s]+(.+)/i,
-                /task[:\s]+(.+)/i,
-                /reminder[:\s]+(.+)/i,
-                /need to[:\s]+(.+)/i,
-                /don't forget to[:\s]+(.+)/i
-            ];
-
-            for (const pattern of taskPatterns) {
-                const match = message.content.match(pattern);
-                if (match) {
-                    addTask(match[1].trim(), message.sender);
-                    break;
+            // Use NLP to extract tasks from the message
+            const extractedTasks = extractTasksFromMessage(message.content);
+            
+            extractedTasks.forEach(taskData => {
+                // Only add tasks with reasonable confidence
+                if (taskData.confidence >= 0.3) {
+                    addTask(taskData, message.sender);
                 }
-            }
+            });
         }
         
         // Check for username in URL parameter
@@ -858,8 +988,17 @@
                     messageElement.innerHTML = '<strong>' + message.sender + '</strong>' + message.content;
                 }
                 
-                // Detect tasks in chat messages
-                detectTasks(message);
+                // Detect tasks only for the intended recipient or own messages
+                try {
+                    const contentText = (message.content || '').toString();
+                    const mentionedCurrentUser = username && contentText.includes('@' + username);
+                    const isOwnMessage = message.sender === username;
+                    if (isOwnMessage || mentionedCurrentUser) {
+                        detectTasks(message);
+                    }
+                } catch (e) {
+                    // no-op if message shape is unexpected
+                }
             }
             
             messageArea.appendChild(messageElement);

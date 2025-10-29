@@ -39,6 +39,7 @@
 			<artifactId>lombok</artifactId>
 		</dependency>
 
+<<<<<<< HEAD
 		<!-- H2 Database for Chat History -->
 		<dependency>
 			<groupId>com.h2database</groupId>
@@ -52,6 +53,18 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
+=======
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.7.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+>>>>>>> f60ad17 (Backend and NLP Integration Done)
 	</dependencies>
 
 	<build>

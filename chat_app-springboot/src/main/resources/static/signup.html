@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0"/>
-    <title>Login | HolySync</title>
+    <title>Sign Up | HolySync</title>
     <link
         rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -86,7 +86,7 @@
             }
         }
 
-        .login-container {
+        .signup-container {
             position: relative;
             z-index: 1;
             background: rgba(255, 255, 255, 0.05);
@@ -202,7 +202,7 @@
             min-height: 20px;
         }
 
-        .username-submit {
+        .signup-submit {
             width: 100%;
             padding: 16px;
             font-size: 18px;
@@ -217,12 +217,12 @@
             margin-top: 10px;
         }
 
-        .username-submit:hover {
+        .signup-submit:hover {
             transform: translateY(-2px);
             box-shadow: 0 15px 40px rgba(99, 102, 241, 0.5);
         }
 
-        .username-submit:active {
+        .signup-submit:active {
             transform: translateY(0);
         }
 
@@ -271,7 +271,7 @@
         }
 
         @media (max-width: 768px) {
-            .login-container {
+            .signup-container {
                 padding: 40px 30px;
                 max-width: 90%;
             }
@@ -300,36 +300,56 @@
         <h2>Please enable JavaScript in your browser!!!</h2>
     </noscript>
     
-    <div class="login-container">
+    <div class="signup-container">
         <div class="logo">
             <div class="logo-icon"></div>
             <span>HolySync</span>
         </div>
         
-        <h1>Welcome Back</h1>
+        <h1>Create Account</h1>
         
-        <form id="usernameForm" name="usernameForm">
+        <form id="signupForm" name="signupForm">
             <div class="form-group">
                 <input
                     type="text"
-                    id="name"
-                    placeholder="Enter your name"
+                    id="username"
+                    placeholder="Enter your username"
                     autocomplete="off"
                     class="form-control"
                     autofocus
                 />
+            </div>
+            <div class="form-group">
                 <input
-                    type="password"
-                    id="password"
-                    placeholder="Enter password"
+                    type="email"
+                    id="email"
+                    placeholder="Enter your email"
                     autocomplete="off"
                     class="form-control"
                 />
-                <span id="mes"></span>
             </div>
             <div class="form-group">
-                <button type="submit" class="username-submit">
-                    <i class="fa-solid fa-right-to-bracket"></i> Enter Chat
+                <input
+                    type="password"
+                    id="password"
+                    placeholder="Set your password"
+                    autocomplete="off"
+                    class="form-control"
+                />
+            </div>
+            <div class="form-group">
+                <input
+                    type="password"
+                    id="confirmPassword"
+                    placeholder="Confirm your password"
+                    autocomplete="off"
+                    class="form-control"
+                />
+            </div>
+            <span id="mes"></span>
+            <div class="form-group">
+                <button type="submit" class="signup-submit">
+                    <i class="fa-solid fa-user-plus"></i> Sign Up
                 </button>
             </div>
         </form>
@@ -345,36 +365,6 @@
         </svg>
     </div>
 
-    <script>
-    "use strict";
-
-    var usernameForm = document.querySelector("#usernameForm");
-
-    function login(event) {
-        event.preventDefault();
-        
-        var username = document.querySelector("#name").value.trim();
-        var password = document.querySelector("#password").value;
-        
-        if (!username) {
-            let mes = document.getElementById("mes");
-            mes.innerText = "Please enter your name";
-            return;
-        }
-        
-        // Check password
-        if (password === "hello") {
-            console.log("Login successful, redirecting with username:", username);
-            
-            // Redirect to chat page with username in URL
-            window.location.href = "chat.html?user=" + encodeURIComponent(username);
-        } else {
-            let mes = document.getElementById("mes");
-            mes.innerText = "Wrong password";
-        }
-    }
-
-    usernameForm.addEventListener("submit", login, true);
-    </script>
+    <script src="js/signup.js"></script>
 </body>
 </html>
