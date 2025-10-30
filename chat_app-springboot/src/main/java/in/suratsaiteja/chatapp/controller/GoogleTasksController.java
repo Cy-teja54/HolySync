@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import in.suratsaiteja.chatapp.config.GoogleOAuthConfig;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -32,14 +34,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @CrossOrigin(origins = "*")
 public class GoogleTasksController {
 
-	@Value("${google.oauth.client-id:}")
-	private String clientId;
+	private final GoogleOAuthConfig oauthConfig;
 
-	@Value("${google.oauth.client-secret:}")
-	private String clientSecret;
-
-	@Value("${google.oauth.redirect-uri:http://localhost:8080/oauth-callback.html}")
-	private String redirectUri;
+	public GoogleTasksController(GoogleOAuthConfig oauthConfig) {
+		this.oauthConfig = oauthConfig;
+	}
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -55,11 +54,11 @@ public class GoogleTasksController {
             @RequestParam(value = "clientId", required = false) String clientIdOverride,
             @RequestParam(value = "redirectUri", required = false) String redirectUriOverride) {
 
-        String effectiveClientId = (clientIdOverride != null && !clientIdOverride.isBlank()) ? clientIdOverride : clientId;
-        String effectiveRedirect = (redirectUriOverride != null && !redirectUriOverride.isBlank()) ? redirectUriOverride : redirectUri;
+        String effectiveClientId = (clientIdOverride != null && !clientIdOverride.isBlank()) ? clientIdOverride : oauthConfig.getClientId();
+        String effectiveRedirect = (redirectUriOverride != null && !redirectUriOverride.isBlank()) ? redirectUriOverride : oauthConfig.getRedirectUri();
 
         boolean clientIdMissing = (effectiveClientId == null || effectiveClientId.isBlank() || "your_client_id_here".equalsIgnoreCase(effectiveClientId));
-        boolean clientSecretMissing = (clientSecret == null || clientSecret.isBlank() || "your_client_secret_here".equalsIgnoreCase(clientSecret));
+        boolean clientSecretMissing = (oauthConfig.getClientSecret() == null || oauthConfig.getClientSecret().isBlank() || "your_client_secret_here".equalsIgnoreCase(oauthConfig.getClientSecret()));
         boolean redirectMissing = (effectiveRedirect == null || effectiveRedirect.isBlank());
 		if (clientIdMissing || clientSecretMissing || redirectMissing) {
 			Map<String, Object> err = new HashMap<>();
@@ -166,9 +165,9 @@ public class GoogleTasksController {
 	private Map<String, Object> exchangeCodeForTokens(String code) throws Exception {
 		String tokenUrl = "https://oauth2.googleapis.com/token";
 		String payload = "code=" + urlEncode(code)
-				+ "&client_id=" + urlEncode(clientId)
-				+ "&client_secret=" + urlEncode(clientSecret)
-				+ "&redirect_uri=" + urlEncode(redirectUri)
+				+ "&client_id=" + urlEncode(oauthConfig.getClientId())
+				+ "&client_secret=" + urlEncode(oauthConfig.getClientSecret())
+				+ "&redirect_uri=" + urlEncode(oauthConfig.getRedirectUri())
 				+ "&grant_type=authorization_code";
 
 		byte[] bytes = payload.getBytes(StandardCharsets.UTF_8);
